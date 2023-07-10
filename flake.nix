@@ -26,7 +26,7 @@
           [ ];
         pkgs = import nixpkgs { inherit system; };
         llama-python =
-          pkgs.python310.withPackages (ps: with ps; [ numpy sentencepiece ]);
+          pkgs.python310.withPackages (ps: with ps; [ numpy sentencepiece pip ]);
       in {
         packages.default = pkgs.stdenv.mkDerivation {
           name = "llama.cpp";
