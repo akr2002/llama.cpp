@@ -38,7 +38,7 @@
             "";
           nativeBuildInputs = with pkgs; [ cmake ];
           buildInputs = osSpecific;
-          cmakeFlags = [ "-DLLAMA_BUILD_SERVER=ON" ] ++ (optionals isM1 [
+          cmakeFlags = [ "-DLLAMA_BUILD_SERVER=ON" "-DLLAMA_LTO=ON" "-DLLAMA_SANITIZE_THREAD=OFF -DLAMMA_SANITIZE_ADRRESS=ON" "-DLLAMA_SANITIZE_UNDEFINED=ON" ] ++ (optionals isM1 [
             "-DCMAKE_C_FLAGS=-D__ARM_FEATURE_DOTPROD=1"
             "-DLLAMA_METAL=ON"
           ]);
@@ -48,9 +48,9 @@
             mv $out/bin/main $out/bin/llama
             mv $out/bin/server $out/bin/llama-server
 
-            echo "#!${llama-python}/bin/python" > $out/bin/convert.py
-            cat ${./convert.py} >> $out/bin/convert.py
-            chmod +x $out/bin/convert.py
+            echo "#!${llama-python}/bin/python" > $out/bin/llama-convert.py
+            cat ${./convert.py} >> $out/bin/llama-convert.py
+            chmod +x $out/bin/llama-convert.py
           '';
           meta.mainProgram = "llama";
         };
