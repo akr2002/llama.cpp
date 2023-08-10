@@ -45,7 +45,7 @@
           cat ${./convert.py} >> $out/bin/llama-convert.py
           chmod +x $out/bin/llama-convert.py
         '';
-        cmakeFlags = [ "-DLLAMA_BUILD_SERVER=ON" "-DLLAMA_MPI=ON" "-DBUILD_SHARED_LIBS=ON" "-DCMAKE_SKIP_BUILD_RPATH=ON" "-DLLAMA_LTO=ON" "-DLLAMA_SANITIZE_THREAD=OFF -DLAMMA_SANITIZE_ADRRESS=ON" "-DLLAMA_SANITIZE_UNDEFINED=ON" ];
+        cmakeFlags = [ "-DLLAMA_BUILD_SERVER=ON" "-DLLAMA_MPI=ON" "-DBUILD_SHARED_LIBS=ON" "-DCMAKE_SKIP_BUILD_RPATH=ON" "-DLLAMA_LTO=ON" "-DLLAMA_SANITIZE_THREAD=OFF -DLAMMA_SANITIZE_ADRRESS=ON" "-DLLAMA_SANITIZE_UNDEFINED=OFF" ];
       in {
         packages.default = pkgs.stdenv.mkDerivation {
           name = "llama.cpp";
