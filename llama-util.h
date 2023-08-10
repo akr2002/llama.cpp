@@ -149,6 +149,46 @@ struct llama_file {
     }
 };
 
+// llama_context_data
+struct llama_data_context {
+    virtual void write(const void * src, size_t size) = 0;
+    virtual size_t get_size_written() = 0;
+    virtual ~llama_data_context() = default;
+};
+
+struct llama_data_buffer_context : llama_data_context {
+    uint8_t* ptr;
+    size_t size_written = 0;
+
+    llama_data_buffer_context(uint8_t * p) : ptr(p) {}
+
+    void write(const void * src, size_t size) override {
+        memcpy(ptr, src, size);
+        ptr += size;
+        size_written += size;
+    }
+
+    size_t get_size_written() override {
+        return size_written;
+    }
+};
+
+struct llama_data_file_context : llama_data_context {
+    llama_file* file;
+    size_t size_written = 0;
+
+    llama_data_file_context(llama_file * f) : file(f) {}
+
+    void write(const void * src, size_t size) override {
+        file->write_raw(src, size);
+        size_written += size;
+    }
+
+    size_t get_size_written() override {
+        return size_written;
+    }
+};
+
 #if defined(_WIN32)
 static std::string llama_format_win_err(DWORD err) {
     LPSTR buf;
@@ -175,13 +215,13 @@ struct llama_mmap {
     llama_mmap(struct llama_file * file, size_t prefetch = (size_t) -1 /* -1 = max value */, bool numa = false) {
         size = file->size;
         int fd = fileno(file->fp);
-        int flags = MAP_PRIVATE;
+        int flags = MAP_SHARED;
         // prefetch/readahead impairs performance on NUMA systems
         if (numa) { prefetch = 0; }
 #ifdef __linux__
-        if (prefetch) { flags |= MAP_POPULATE; }
+        if (prefetch >= file->size) { flags |= MAP_POPULATE; }
 #endif
-        addr = mmap(NULL, file->size, PROT_READ | PROT_WRITE, flags, fd, 0);
+        addr = mmap(NULL, file->size, PROT_READ, flags, fd, 0);
         if (addr == MAP_FAILED) {
             throw std::runtime_error(format("mmap failed: %s", strerror(errno)));
         }
@@ -223,7 +263,7 @@ struct llama_mmap {
             throw std::runtime_error(format("CreateFileMappingA failed: %s", llama_format_win_err(error).c_str()));
         }
 
-        addr = MapViewOfFile(hMapping, FILE_MAP_COPY, 0, 0, 0);
+        addr = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
         error = GetLastError();
         CloseHandle(hMapping);
 
